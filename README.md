@@ -20,11 +20,11 @@
 
 | No | Nama | NIM | Peran |
 |:--:|:-----|:---:|:-----:|
-| 1 | **Faisal H. Sinambela** | 124140040 | - |
-| 2 | **Gabriel Sitorus** | 124140188 | - |
-| 3 | **Finn** | 124140127 | - |
-| 4 | **Yayan** | 124140130 | - |
-| 5 | **Zaki** | 124140089 | - |
+| 1 | **Faisal H. Sinambela** | 124140040 | Database |
+| 2 | **Gabriel Sitorus** | 124140188 | Front End |
+| 3 | **Alfino Putra R.** | 124140127 | Back End |
+| 4 | **Yayan Sofian** | 124140130 | Dokumentasi / Testing |
+| 5 | **Muhammad Zaki Ibnu Azizi** | 124140089 | Project Manager |
 
 ## Deskripsi Proyek
 
