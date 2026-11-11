@@ -3,7 +3,7 @@
 
   <br/>
   
-  <b>Selamat datang di repositori Kelompok T - KAPITA SELEKTA! 🚀</b>
+  <b>Selamat datang di repositori Kelompok 7 - KAPITA SELEKTA! 🚀</b>
   <p>Repositori ini didedikasikan untuk kapita selekta pada tugas besar.</p>
 
   <p align="center">
@@ -16,15 +16,15 @@
 
 ---
 
-## Anggota Kelompok
+## Anggota Kelompok : 7
 
 | No | Nama | NIM | Peran |
 |:--:|:-----|:---:|:-----:|
-| 1 | **Faisal H. Sinambela** | 124140020 | - |
-| 2 | **Gabriel Sitorus** | 124140016 | - |
-| 3 | **Finn** | 124140010 | - |
+| 1 | **Faisal H. Sinambela** | 124140040 | - |
+| 2 | **Gabriel Sitorus** | 124140188 | - |
+| 3 | **Finn** | 124140127 | - |
 | 4 | **Yayan** | 124140130 | - |
-| 5 | **Zaki** | 124140142 | - |
+| 5 | **Zaki** | 124140089 | - |
 
 ## Deskripsi Proyek
 
