@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D47A1,100:81D4FA&height=200&section=header&text=Peminjaman%20Ruang%20&%20LAB&fontSize=34&fontColor=ffffff&fontAlignY=38&desc=PAM%20KMP%20%7C%20Institut%20Teknologi%20Sumatera&descAlignY=55&descAlign=50&animation=twinkling" width="100%" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D47A1,100:81D4FA&height=200&section=header&text=Peminjaman%20Ruang%20&%20LAB&fontSize=34&fontColor=ffffff&fontAlignY=38&desc=KAPITA%20SELEKTA%20%7C%20Institut%20Teknologi%20Sumatera&descAlignY=55&descAlign=50&animation=twinkling" width="100%" />
 
   <br/>
-  
+
   <b>Selamat datang di repositori Kelompok 7 - KAPITA SELEKTA! 🚀</b>
   <p>Repositori ini didedikasikan untuk kapita selekta pada tugas besar.</p>
 
