@@ -3,8 +3,8 @@
 
   <br/>
   
-  <b>Selamat datang di repositori Kelompok T - PAM KMP! 🚀</b>
-  <p>Repositori ini didedikasikan untuk pengembangan aplikasi Sistem Peminjaman Ruang Kelas dan LAB secara Multiplatform.</p>
+  <b>Selamat datang di repositori Kelompok T - KAPITA SELEKTA! 🚀</b>
+  <p>Repositori ini didedikasikan untuk kapita selekta pada tugas besar.</p>
 
   <p align="center">
     <img src="https://img.shields.io/badge/Kotlin-0095D5?style=for-the-badge&logo=kotlin&logoColor=white" />
