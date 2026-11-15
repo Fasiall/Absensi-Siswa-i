@@ -1,0 +1,26 @@
+/* Fondasi ringan; desain halaman fitur tetap mengacu pada prototype nanti. */
+:root {
+    color-scheme: light;
+    --app-background: #f6f7f9;
+    --app-text: #212529;
+    --app-muted: #545b62;
+    --app-focus: #084298;
+}
+body {
+    margin: 0;
+    background: var(--app-background);
+    color: var(--app-text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+.app-container { width: min(100% - 2rem, 56rem); margin-inline: auto; }
+.text-secondary { color: var(--app-muted) !important; }
+:focus-visible { outline: 3px solid var(--app-focus); outline-offset: 4px; }
+.skip-link { position: absolute; top: -8rem; left: 1rem; padding: .75rem; background: white; z-index: 10; }
+.skip-link:focus { top: 1rem; }
+/* Jarak dasar tetap terbaca jika stylesheet Bootstrap CDN tidak tersedia. */
+header, footer { padding-block: 1rem; }
+main { padding-block: 2rem; }
+section { margin-block: 1.5rem; }
+p, li { overflow-wrap: anywhere; }

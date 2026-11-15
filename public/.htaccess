@@ -1,0 +1,13 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+RewriteEngine On
+# Hanya aset statis yang dapat melewati front controller.
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^assets/ - [L]
+RewriteRule ^index\.php$ - [L]
+RewriteRule ^ index.php [QSA,L]
