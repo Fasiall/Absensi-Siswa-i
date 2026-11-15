@@ -1,0 +1,30 @@
+# Rahasia dan konfigurasi lokal
+.env
+.env.*
+!.env.example
+!app/config/.env.example
+
+# Dependency dan hasil build
+/vendor/
+/node_modules/
+/public/assets/vendor/
+
+# Data runtime/upload (bukan source)
+/uploads/
+/public/uploads/
+/storage/
+/logs/
+*.log
+*.sql.gz
+*.sql.zip
+/database/backups/
+
+# File editor dan sistem operasi
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+/phpunit.xml
+/.phpunit.cache/

@@ -1,0 +1,8 @@
+# Pertahanan tambahan bila proyek ditempatkan langsung di htdocs.
+# Pada hosting, tetap arahkan DocumentRoot ke public/.
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(?:app|bin|database|docs|prototype|tests|vendor|storage|uploads|logs)(?:/|$) - [F,L,NC]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule ^(?:README\.md|composer\.(?:json|lock))$ - [F,L,NC]
+RewriteRule ^$ public/ [R=302,L]
