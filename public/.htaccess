@@ -9,5 +9,6 @@ RewriteEngine On
 # Hanya aset statis yang dapat melewati front controller.
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^assets/ - [L]
-RewriteRule ^index\.php$ - [L]
+RewriteRule ^(?:index|api)\.php$ - [L]
+RewriteRule ^api/v1(?:/|$) api.php [QSA,L]
 RewriteRule ^ index.php [QSA,L]

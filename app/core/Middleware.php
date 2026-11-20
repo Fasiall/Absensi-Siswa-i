@@ -15,12 +15,10 @@ final class Middleware
     {
         $user = $this->auth->user();
         if ($user === null) {
-            http_response_code(401);
-            exit('Silakan login terlebih dahulu.');
+            throw new ApiException(401, 'unauthenticated', 'Silakan login terlebih dahulu.');
         }
         if (!in_array($user['role'], $roles, true)) {
-            http_response_code(403);
-            exit('Anda tidak memiliki izin untuk mengakses halaman ini.');
+            throw new ApiException(403, 'forbidden', 'Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
         return $user;
     }
