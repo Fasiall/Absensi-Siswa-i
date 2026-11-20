@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 
+use App\Core\Api;
+use App\Core\ApiException;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Middleware;
 use App\Core\Validator;
+use App\Services\LoginThrottle;
 
 /** Double PDO; menguji alur Auth, bukan kompatibilitas SQL MySQL. */
 final class MemoryPdo extends PDO
@@ -87,6 +90,30 @@ $token = Csrf::token();
 expect(strlen($token) === 64 && $token === Csrf::token(), 'CSRF stable random token');
 expect(Csrf::verify($token) && !Csrf::verify('bad'), 'CSRF matching');
 expect(str_contains(Csrf::field(), 'type="hidden"'), 'CSRF field');
+$apiControllerSource = file_get_contents(BASE_PATH . '/app/controllers/ApiController.php');
+expect(is_string($apiControllerSource) && !str_contains($apiControllerSource, 'Api::input()'), 'API controller uses existing JSON body parser');
+$attendanceSource = file_get_contents(BASE_PATH . '/app/services/AttendanceService.php');
+expect(is_string($attendanceSource) && str_contains($attendanceSource, 'a.status, a.method'), 'attendance list query uses valid column reference');
+$_SERVER['CONTENT_TYPE'] = 'text/plain';
+try {
+    Api::body();
+    expect(false, 'API rejects non-JSON content type');
+} catch (ApiException $exception) {
+    expect($exception->status === 415, 'API rejects non-JSON content type');
+}
+$_SERVER['CONTENT_TYPE'] = 'application/json';
+try {
+    Api::body();
+    expect(false, 'API rejects empty/invalid JSON body');
+} catch (ApiException $exception) {
+    expect($exception->status === 400, 'API rejects empty/invalid JSON body');
+}
+try {
+    new LoginThrottle(new MemoryPdo(), 'short-key');
+    expect(false, 'login throttle rejects weak APP_KEY');
+} catch (RuntimeException) {
+    expect(true, 'login throttle rejects weak APP_KEY');
+}
 $db = new MemoryPdo();
 $db->account['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
 $auth = new Auth($db);

@@ -4,7 +4,8 @@ Skema untuk PHP Native 8.1 dengan MySQL 5.7+ atau MariaDB 10.2+. Seluruh tabel m
 
 ## Berkas dan pemasangan
 
-- `migrations/001_initial_schema.sql`: membuat 12 tabel, foreign key, serta indeks.
+- `migrations/001_initial_schema.sql`: membuat 12 tabel utama/riwayat, foreign key, serta indeks.
+- `migrations/002_auth_login_attempts.sql`: tabel throttle login, jalankan setelah migrasi 001.
 - `seeds/development_seed.sql`: data fiktif untuk development, tanpa credential atau token QR.
 - `ERD.md`: relasi dan kontrak validasi backend.
 
@@ -234,10 +235,11 @@ FK memvalidasi keberadaan baris, **bukan seluruh aturan bisnis**. Jalankan valid
 
 ## Pemeriksaan setelah impor
 
-Pada database development kosong, hasil yang diharapkan: **12 tabel**, dua user nonaktif dengan hash `NULL`, satu guru, satu tahun ajaran, satu kelas, satu assignment guru, empat siswa, dan empat keanggotaan siswa. Lima tabel operasional/log masih kosong.
+Pada database development kosong setelah migrasi 001 dan 002, hasil yang diharapkan: **13 tabel**, dua user nonaktif dengan hash `NULL`, satu guru, satu tahun ajaran, satu kelas, satu assignment guru, empat siswa, dan empat keanggotaan siswa. Tabel operasional/log serta throttle login masih kosong.
 
 ```sql
 SHOW TABLES;
+SHOW CREATE TABLE auth_login_attempts;
 SELECT id, username, role, is_active, password_hash IS NULL AS belum_diaktivasi
 FROM users ORDER BY id;
 SELECT COUNT(*) AS jumlah_siswa FROM students;

@@ -122,23 +122,25 @@ Absensi-Siswa-i/
 │   │   ├── .env.example       # Template; salin ke .env pada ROOT proyek
 │   │   ├── app.php            # Konfigurasi aplikasi dan sesi
 │   │   └── database.php       # Koneksi PDO lazy
-│   ├── core/                 # Auth, Middleware, Csrf, dan Validator
+│   ├── core/                 # Auth, Middleware, Csrf, Api, Validator, dan error API
 │   ├── helpers/              # Helper umum, escaping, dan keamanan
-│   ├── controllers/          # Tempat controller fitur; masih kosong
-│   ├── models/               # Tempat akses data model; masih kosong
-│   ├── services/             # Tempat aturan bisnis; masih kosong
+│   ├── controllers/          # ApiController untuk endpoint JSON
+│   ├── models/               # ClassModel dan StudentModel
+│   ├── services/             # AttendanceService, QR token, dan throttle login
 │   └── views/                # Layout, halaman status, serta folder view fitur
 ├── bin/
 │   └── create-user.php        # Pembuatan/aktivasi akun lokal melalui CLI
 ├── database/
 │   ├── migrations/001_initial_schema.sql
+│   ├── migrations/002_auth_login_attempts.sql
 │   ├── seeds/development_seed.sql
 │   └── ERD.md                 # Relasi tabel dan batas validasi backend
 ├── docs/                     # Placeholder dokumentasi, belum ada SRS
 ├── prototype/                # Placeholder, belum ada prototype
 ├── public/
 │   ├── index.php             # Entry point web
-│   ├── .htaccess             # Rewrite ke entry point
+│   ├── api.php               # Entry point API JSON
+│   ├── .htaccess             # Rewrite web dan API
 │   └── assets/
 │       ├── css/app.css       # CSS lokal/fallback
 │       ├── js/
@@ -147,16 +149,16 @@ Absensi-Siswa-i/
 │       └── img/              # Tempat gambar aplikasi
 ├── tests/
 │   ├── lint.php              # Pemeriksaan sintaks PHP aplikasi dan test
-│   └── run.php               # Smoke test helpers, Auth, CSRF, PDO mock
+│   ├── run.php               # Smoke test API input, Auth, CSRF, PDO mock
 ├── .env                      # Dibuat sendiri dari template; tidak disertakan
 ├── .gitignore
 ├── .htaccess                 # Proteksi tambahan jika root berada di htdocs
 └── README.md
 ```
 
-`docs/README.md` mencatat dokumen yang perlu ditambahkan. `prototype/` hanya berisi penanda folder karena desain asli belum ditemukan di workspace. **`docs/SRS_Tahap_1_Analisis_Kebutuhan.md` juga belum tersedia.** Tidak ada isi SRS atau desain prototype yang diasumsikan maupun ditimpa. Folder fitur yang masih kosong memakai `.gitkeep` agar strukturnya tetap tercatat di Git.
+`docs/README.md` mencatat dokumen yang perlu ditambahkan. `prototype/` hanya berisi penanda folder karena desain asli belum ditemukan di workspace. **`docs/SRS_Tahap_1_Analisis_Kebutuhan.md` juga belum tersedia.** Tidak ada isi SRS atau desain prototype yang diasumsikan maupun ditimpa. Beberapa folder fitur masih disiapkan untuk pengembangan berikutnya.
 
-Database berisi 11 tabel wajib: `users`, `teachers`, `academic_years`, `classes`, `teacher_classes`, `students`, `qr_tokens`, `attendance_sessions`, `attendances`, `attendance_logs`, dan `audit_logs`. Tabel tambahan `student_classes` menjaga riwayat keanggotaan kelas. Totalnya **12 tabel**. Detail relasi dan aturan backend ada di [database/ERD.md](database/ERD.md).
+Database berisi 11 tabel wajib, tabel riwayat `student_classes`, dan tabel throttle `auth_login_attempts` (total **13 tabel** setelah kedua migrasi). Detail relasi ada di [database/ERD.md](database/ERD.md).
 
 ## 6. Menjalankan secara lokal
 
@@ -181,6 +183,7 @@ Sesuaikan konfigurasi lokal:
 | Variabel | Pengaturan |
 | --- | --- |
 | `APP_URL` | Default `http://localhost/Absensi-Siswa-i/public`; ubah jika folder, port, atau VirtualHost berbeda |
+| `APP_KEY` | Wajib untuk API login; buat secret lokal 32 byte dengan `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"`, simpan hanya di `.env` |
 | `DB_HOST` | Host layanan database lokal, misalnya `127.0.0.1` |
 | `DB_PORT` | Port database lokal, umumnya `3306` |
 | `DB_DATABASE` | Nama database yang dibuat sendiri; default konfigurasi `absensi_qr_sekolah` |
@@ -198,7 +201,7 @@ http://localhost/Absensi-Siswa-i/public/
 http://localhost/Absensi-Siswa-i/public/index.php
 ```
 
-PDO bersifat **lazy**: koneksi baru dibuat saat `database()` benar-benar dipanggil. Handler homepage tidak membutuhkan database untuk `GET /` atau `GET /index.php` relatif terhadap direktori `public/`. Endpoint aplikasi lain mengembalikan **404**; endpoint login juga **belum tersedia**. Request dengan metode yang tidak didukung ke homepage ditolak dengan 405.
+PDO bersifat **lazy**: koneksi baru dibuat saat `database()` benar-benar dipanggil. Handler homepage dan `GET /api/v1/auth/csrf` tidak membutuhkan database; endpoint API lainnya memerlukan MySQL, `.env`, dan kedua migrasi. Request yang tidak didukung ke homepage ditolak dengan 405.
 
 Halaman status sederhana beserta layout dan asetnya sudah tersedia. Bootstrap 5.3.3 dimuat dari jsDelivr dengan atribut `integrity`/SRI dan CSS fallback lokal. `html5-qrcode` belum dimuat; `scanner.js` hanya placeholder dan tidak meminta akses kamera. Halaman belum diuji visual di browser.
 
@@ -208,8 +211,10 @@ Halaman status sederhana beserta layout dan asetnya sudah tersedia. Bootstrap 5.
 2. Buka phpMyAdmin lokal dan buat database sesuai `DB_DATABASE`, menggunakan collation `utf8mb4_unicode_ci`.
 3. Pilih database kosong tersebut, lalu buka tab **Import**.
 4. Impor `database/migrations/001_initial_schema.sql` terlebih dahulu.
-5. Jika memerlukan contoh data development, impor `database/seeds/development_seed.sql` setelah migrasi berhasil. Seed **opsional**.
-6. Periksa hasil/error impor sebelum melanjutkan. Jangan mengimpor ulang seed pada database berisi data; seed memakai ID tetap dan bukan skrip reset/upsert.
+5. Impor `database/migrations/002_auth_login_attempts.sql` untuk tabel pembatas percobaan login.
+6. Buat `APP_KEY` di `.env` dengan perintah `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"` dan jangan bagikan nilai tersebut.
+7. Jika memerlukan contoh data development, impor `database/seeds/development_seed.sql` setelah kedua migrasi berhasil. Seed **opsional**.
+8. Periksa hasil/error impor sebelum melanjutkan. Jangan mengimpor ulang seed pada database berisi data; seed memakai ID tetap dan bukan skrip reset/upsert.
 
 Migrasi membuat tabel, bukan database atau akun database. DDL dapat melakukan implicit commit, jadi kegagalan migrasi perlu diperiksa sebelum mengulang. Seed memakai transaksi. Data contoh seluruhnya fiktif: satu tahun ajaran `2026/2027`, kelas `4A`, satu guru, empat siswa, serta keanggotaan kelasnya.
 
@@ -246,7 +251,7 @@ Langkah praktis:
 
 Untuk guru, gunakan `--username=guru.demo --role=guru --name="Guru Development"` dan file password privat tersendiri. Jangan memakai contoh password yang sama untuk beberapa akun. Operator `<` pada contoh tersebut tidak didukung langsung oleh PowerShell; jalankan melalui `cmd.exe`.
 
-CLI meng-hash password dengan `PASSWORD_DEFAULT`. Untuk username existing, **role harus sama**, baris user diperbarui tanpa mengganti ID, dan link `teachers` tetap dijaga. Untuk guru baru, profil `teachers` dibuat bersama akun. Konflik role ditolak, bukan otomatis mengubah admin menjadi guru atau sebaliknya. Aktivasi akun belum berarti tersedia halaman login karena endpoint web-nya masih perlu dibuat.
+CLI meng-hash password dengan `PASSWORD_DEFAULT`. Untuk username existing, **role harus sama**, baris user diperbarui tanpa mengganti ID, dan link `teachers` tetap dijaga. Untuk guru baru, profil `teachers` dibuat bersama akun. Konflik role ditolak, bukan otomatis mengubah admin menjadi guru atau sebaliknya. Endpoint login API tersedia di `/api/v1/auth/login`; halaman login web belum dibuat.
 
 ### F. Jalankan pemeriksaan PHP
 
@@ -258,11 +263,36 @@ php tests/run.php
 ```
 
 - `tests/lint.php`: memeriksa sintaks seluruh file PHP.
-- `tests/run.php`: smoke test helpers, Auth, dan CSRF menggunakan PDO mock, **tanpa server MySQL**.
+- `tests/run.php`: smoke test helper keamanan, parsing input API, Auth, CSRF, dan validasi awal tanpa server MySQL.
 
-Smoke test memakai PDO double di memori untuk memeriksa alur autentikasi, role, session, serta CSRF. Test ini tidak membuktikan impor SQL, kamera, scanner, CRUD, aturan Apache, atau integrasi database sungguhan berhasil.
+Smoke test memakai PDO double di memori untuk memeriksa alur autentikasi, role, session, CSRF, dan validasi input API. Test ini tidak membuktikan impor SQL, kamera, scanner, CRUD, aturan Apache, atau integrasi database sungguhan berhasil.
 
-## 7. Role dan hak akses
+## 7. API yang tersedia
+
+Semua endpoint memakai prefix `/api/v1`, session cookie, dan respons JSON. Untuk request `POST`, ambil token dari `GET /api/v1/auth/csrf`, lalu kirim header `X-CSRF-Token` beserta `Content-Type: application/json`. Login juga memerlukan token CSRF. Browser harus menyertakan cookie session (`credentials: same-origin`).
+
+| Method | Endpoint | Akses | Kegunaan |
+| --- | --- | --- | --- |
+| `GET` | `/auth/csrf` | Publik | Membuat/mengambil token CSRF |
+| `POST` | `/auth/login` | Publik + CSRF | Login memakai `username` dan `password` |
+| `GET` | `/auth/me` | Admin/guru | Profil sesi aktif dan token CSRF |
+| `POST` | `/auth/logout` | Admin/guru + CSRF | Mengakhiri sesi |
+| `GET` | `/classes` | Admin/guru | Daftar kelas; guru hanya kelas penugasannya |
+| `GET` | `/classes/{id}/students?page=1&per_page=50` | Admin/guru | Daftar siswa dengan pagination |
+| `POST` | `/classes/{id}/students` | Admin + CSRF | Tambah siswa dan keanggotaan kelas |
+| `GET` | `/sessions` | Admin/guru | Daftar sesi terbaru, dibatasi kelas guru |
+| `POST` | `/sessions` | Admin/guru + CSRF | Buka sesi hari ini dengan `class_id` |
+| `POST` | `/sessions/{id}/close` | Admin/guru pemilik kelas + CSRF | Tutup sesi aktif |
+| `GET` | `/sessions/{id}/attendances` | Admin/guru pemilik kelas | Lihat catatan absensi sesi |
+| `POST` | `/sessions/{id}/attendances` | Admin/guru pemilik kelas + CSRF | Catat manual: `student_id`, `status`, opsional `notes` |
+| `POST` | `/sessions/{id}/scan` | Admin/guru pemilik kelas + CSRF | Validasi token QR dan catat hadir |
+| `POST` | `/students/{id}/qr-token` | Admin + CSRF | Terbitkan token QR; token mentah dikembalikan satu kali |
+
+Untuk contoh body dan respons, lihat [docs/API.md](docs/API.md). Response success memakai `{ "data": ... }`; error memakai HTTP status yang sesuai dan `{ "error": { "code", "message" } }`. Token QR hanya berisi random token, disimpan sebagai hash di database, dan tidak pernah dikembalikan pada pemindaian.
+
+Endpoints ini merupakan backend awal, bukan seluruh sistem. CRUD edit/hapus, manajemen kelas/tahun ajaran/guru, koreksi absensi, laporan/export, UI login, dan integrasi scanner kamera belum dibuat.
+
+## 8. Role dan hak akses
 
 | Role | Hak akses yang direncanakan | Batas akses |
 | --- | --- | --- |
@@ -272,14 +302,14 @@ Smoke test memakai PDO double di memori untuk memeriksa alur autentikasi, role, 
 
 Kerangka `Middleware::admin()`, `guru()`, dan `adminOrGuru()` memeriksa role. Pemeriksaan **penugasan dan kepemilikan kelas tetap wajib dilakukan di service/query**; lolos middleware guru tidak otomatis boleh mengakses semua kelas.
 
-## 8. Keamanan dan batas implementasi
+## 9. Keamanan dan batas implementasi
 
 ### Fondasi yang sudah ada
 
-- `Auth` menyediakan `attempt()`, `user()`, `check()`, `hasRole()`, dan `logout()`, tetapi belum terhubung ke endpoint login/logout publik.
+- `Auth` menyediakan `attempt()`, `user()`, `check()`, `hasRole()`, dan `logout()`; endpoint JSON login/logout menggunakan helper tersebut.
 - Query Auth memakai PDO prepared statement, `password_verify()`, dan rehash ketika diperlukan melalui `password_needs_rehash()`.
 - ID sesi dirotasi setelah login berhasil; idle timeout default **30 menit**. Status aktif dan role dibaca ulang dari database, bukan dipercaya hanya dari sesi lama.
-- Helper CSRF tersedia untuk token dan validasi **POST** pada operasi yang mengubah data, termasuk login/logout ketika endpoint dibuat. Ketersediaan helper tidak berarti seluruh endpoint sudah ada atau terlindungi otomatis.
+- Endpoint API mutasi memakai session CSRF token melalui header `X-CSRF-Token`; session cookie `HttpOnly`, `SameSite=Lax`, dan secure pada HTTPS.
 - `.htaccess` root memblokir direktori privat dan dotfile sebagai fallback bila proyek ditempatkan langsung di `htdocs`. Proteksi ini bergantung pada Apache dan `AllowOverride` yang benar.
 
 ### Aturan yang harus diterapkan pada fitur lanjutan
@@ -298,18 +328,19 @@ Arahkan **DocumentRoot ke `public/`** sebagai pilihan yang disarankan. Pada shar
 
 Belum ada deployment yang dilakukan atau diklaim berhasil. Sebelum deployment diperlukan pengujian integrasi, konfigurasi HTTPS, hak akses file/database, dan pemeriksaan akses langsung ke berkas privat.
 
-## 9. Status pengembangan
+## 10. Status pengembangan
 
 | Bagian | Status |
 | --- | --- |
 | Migrasi, seed, dan ERD | Tersedia; impor SQL langsung belum diverifikasi |
 | Bootstrap, konfigurasi, PDO lazy | Fondasi tersedia |
-| Auth, middleware role, helper CSRF | Kerangka tersedia; belum ada endpoint login/logout |
+| Auth, middleware role, helper CSRF | Endpoint API login/logout dan role tersedia; UI login belum ada |
 | Homepage | Entry point, layout, halaman status, dan aset tersedia |
 | Bootstrap 5.3.3 + SRI + CSS fallback | Tersedia; belum diuji visual di browser |
 | CLI aktivasi dan skrip test | Tersedia; aktivasi dengan database nyata perlu diuji lokal |
-| CRUD dan scanner penuh | Belum diimplementasikan; `html5-qrcode` belum dimuat |
+| Backend API | Login, daftar kelas/siswa, buka/tutup sesi, catat manual/QR, penerbitan token tersedia; perlu diuji dengan MySQL |
+| CRUD penuh dan scanner kamera | Belum diimplementasikan; `html5-qrcode` belum dimuat |
 | Prototype dan SRS | Tidak tersedia; hanya dialokasikan sebagai placeholder |
 | Deployment | Belum dilakukan |
 
-Proyek masih pada tahap awal: struktur proyek dan rancangan database sudah disiapkan, sedangkan prototype antarmuka menunggu materi asli. Langkah berikutnya adalah menambahkan SRS/prototype, menguji impor database di XAMPP, lalu membuat login, CRUD, sesi absensi, scanner, laporan, dan deployment secara bertahap.
+Proyek masih pada tahap awal: struktur proyek dan rancangan database sudah disiapkan, sedangkan prototype antarmuka menunggu materi asli. Langkah berikutnya adalah menambahkan SRS/prototype, menguji migrasi dan API di XAMPP, membuat UI login serta scanner kamera, melengkapi CRUD/laporan, lalu menyiapkan deployment secara bertahap.
